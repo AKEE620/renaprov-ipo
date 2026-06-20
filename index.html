@@ -3,828 +3,994 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Documents IPO RENAPROV</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<title>Profil de risque investisseur</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-  :root {
-    --gold: #C8973A;
-    --gold-light: #E8B96A;
-    --dark: #0D0E10;
-    --dark2: #161820;
-    --dark3: #1E2028;
-    --border: rgba(200,151,58,0.2);
-  }
+:root{
+  --red:#A6192E; --red-dark:#7C1322; --red-light:#F4E3E6;
+  --ink:#1A1A1A; --grey-900:#2B2B2B; --grey-600:#6B6B6B;
+  --grey-300:#D8D4CE; --grey-150:#ECE8E2; --grey-100:#F5F2EE; --paper:#FFFDFA;
+  --success:#2F6F4E; --warning:#9A5B12; --radius:10px;
+  --shadow:0 1px 2px rgba(26,26,26,.06), 0 8px 24px rgba(26,26,26,.07);
+  --serif:Georgia,'Iowan Old Style','Palatino Linotype','Book Antiqua',serif;
+  --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--grey-100);color:var(--ink);font-family:var(--sans);font-size:15px;line-height:1.6;}
+.brand-strip{height:4px;background:linear-gradient(to right,var(--red) 0 34%,var(--ink) 34% 67%,var(--grey-300) 67% 100%);}
+.shell{max-width:1000px;margin:0 auto;padding:28px 18px 56px;}
+.masthead{display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:10px;border-bottom:3px solid var(--red);padding-bottom:14px;margin-bottom:26px;}
+.masthead .org{font-family:var(--serif);font-weight:700;font-size:12.5px;letter-spacing:.07em;text-transform:uppercase;color:var(--red);}
+.masthead h1{font-family:var(--serif);font-size:23px;margin:4px 0 0;color:var(--ink);font-weight:600;}
+.admin-link{background:none;border:1px solid var(--grey-300);color:var(--grey-600);font-size:12px;cursor:pointer;padding:7px 14px;border-radius:20px;font-family:var(--sans);}
+.admin-link:hover{color:var(--ink);border-color:var(--ink);}
 
-  * { margin: 0; padding: 0; box-sizing: border-box; }
+/* ----- Rail horizontal ----- */
+.rail{display:flex;align-items:flex-start;justify-content:center;gap:0;margin-bottom:30px;overflow-x:auto;padding:6px 2px 12px;}
+.step{display:flex;flex-direction:column;align-items:center;gap:7px;flex:0 0 auto;min-width:58px;text-align:center;opacity:.48;}
+.step.active{opacity:1;}
+.step.done{opacity:.9;}
+.step .num{width:32px;height:32px;border-radius:50%;background:var(--grey-300);color:#fff;font-size:13px;display:flex;align-items:center;justify-content:center;font-weight:700;transition:background .2s,box-shadow .2s;}
+.step.active .num{background:var(--red);box-shadow:0 0 0 5px var(--red-light);}
+.step.done .num{background:var(--success);}
+.step .label{font-size:11px;color:var(--grey-900);max-width:90px;line-height:1.25;}
+.connector{flex:1 1 28px;height:2px;background:var(--grey-300);margin-top:16px;min-width:14px;max-width:60px;}
+.connector.done{background:var(--success);}
+@media (max-width:680px){.step .label{font-size:9.5px;max-width:62px;}.step .num{width:27px;height:27px;font-size:11.5px;}.connector{max-width:18px;}}
 
-  body {
-    font-family: 'DM Sans', sans-serif;
-    min-height: 100vh;
-    overflow-x: hidden;
-    background: #000;
-  }
+.panel{background:var(--paper);border-radius:var(--radius);box-shadow:var(--shadow);padding:28px 30px;min-height:340px;}
+@media (max-width:600px){.panel{padding:20px 16px;}}
+.panel h2{font-family:var(--serif);font-size:20px;margin:0 0 6px;color:var(--ink);}
+.panel .lead{color:var(--grey-600);font-size:13.5px;margin:0 0 20px;}
 
-  /* ===== SLIDESHOW BACKGROUND ===== */
-  .slideshow {
-    position: fixed;
-    inset: 0;
-    z-index: 0;
-    background: #0a0a0a;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+.field{margin-bottom:16px;}
+.field label{display:block;font-size:13px;font-weight:600;color:var(--grey-900);margin-bottom:6px;}
+.field input[type=text],.field input[type=date],.field select,.field textarea{
+  width:100%;padding:11px 12px;border:1px solid var(--grey-300);border-radius:7px;font-family:var(--sans);font-size:14.5px;background:#fff;color:var(--ink);
+}
+.field textarea{min-height:64px;resize:vertical;}
 
-  .slide {
-    position: absolute;
-    inset: 0;
-    opacity: 0;
-    transition: opacity 1.2s ease;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
+.question{margin-bottom:24px;}
+.question .q-label{font-weight:600;font-size:14.5px;margin-bottom:10px;color:var(--ink);}
+.options{display:flex;flex-direction:column;gap:9px;}
+.option{border:1px solid var(--grey-300);border-radius:9px;padding:12px 16px;cursor:pointer;display:flex;align-items:center;gap:11px;transition:border-color .15s,background .15s,transform .1s;}
+.option:hover{border-color:var(--red);}
+.option.selected{border-color:var(--red);background:var(--red-light);}
+.option input{accent-color:var(--red);width:17px;height:17px;}
+.option .opt-text{font-size:14px;}
 
-  .slide.active { opacity: 1; }
+.curve-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+@media (max-width:680px){.curve-grid{grid-template-columns:repeat(3,1fr);}}
+@media (max-width:420px){.curve-grid{grid-template-columns:repeat(2,1fr);}}
+.curve-card{border:1px solid var(--grey-300);border-radius:10px;padding:10px 6px 12px;text-align:center;cursor:pointer;background:#fff;transition:border-color .15s,box-shadow .15s,transform .1s;}
+.curve-card:hover{border-color:var(--red);transform:translateY(-2px);box-shadow:var(--shadow);}
+.curve-card.selected{border-color:var(--red);background:var(--red-light);}
+.val-pos{color:var(--success);font-weight:700;font-size:12.5px;}
+.val-neg{color:var(--red);font-weight:700;font-size:12.5px;margin-top:2px;}
+.curve-bars{display:flex;flex-direction:column;height:66px;margin:4px 0;}
+.half{flex:1;display:flex;justify-content:center;}
+.half.top{align-items:flex-end;}
+.half.bottom{align-items:flex-start;}
+.baseline{height:1px;background:var(--grey-300);}
+.bar{width:15px;border-radius:3px 3px 0 0;}
+.bar.neg{border-radius:0 0 3px 3px;}
+.bar.pos{background:var(--success);}
+.bar.neg{background:var(--red);}
+.curve-card .lbl{font-size:13px;font-weight:700;margin-top:6px;color:var(--ink);}
 
-  .slide img {
-    max-width: 100%;
-    max-height: 100vh;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-    display: block;
-    position: relative;
-    z-index: 1;
-  }
+.grid-connaissance{width:100%;border-collapse:collapse;font-size:13px;}
+.grid-connaissance th,.grid-connaissance td{border:1px solid var(--grey-300);padding:9px 8px;}
+.grid-connaissance th{background:var(--grey-150);font-weight:700;text-align:left;font-size:12px;}
+.grid-connaissance select{width:100%;padding:7px;border:1px solid var(--grey-300);border-radius:6px;font-family:var(--sans);font-size:13px;}
 
-  .slide::after {
-    content: '';
-    position: absolute;
-    inset: 0;
-    background: rgba(0,0,0,0.42);
-    pointer-events: none;
-    z-index: 2;
-  }
+.btn-row{display:flex;justify-content:space-between;margin-top:26px;flex-wrap:wrap;gap:10px;}
+.btn{font-family:var(--sans);font-size:14px;font-weight:600;padding:12px 22px;border-radius:8px;border:1px solid transparent;cursor:pointer;}
+.btn-primary{background:var(--red);color:#fff;}
+.btn-primary:hover{background:var(--red-dark);}
+.btn-primary:disabled{background:var(--grey-300);cursor:not-allowed;}
+.btn-ghost{background:transparent;border-color:var(--grey-300);color:var(--ink);}
+.btn-ghost:hover{border-color:var(--ink);}
 
-  /* Pause indicator */
-  .pause-indicator {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 50;
-    background: rgba(0,0,0,0.55);
-    color: #fff;
-    border: 1px solid rgba(255,255,255,0.3);
-    border-radius: 20px;
-    padding: 6px 14px;
-    font-size: 12px;
-    font-family: 'DM Sans', sans-serif;
-    letter-spacing: 0.05em;
-    display: none;
-    align-items: center;
-    gap: 6px;
-    backdrop-filter: blur(4px);
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .pause-indicator.visible { display: flex; }
-  .pause-indicator:hover { background: rgba(200,151,58,0.5); }
+.alert{border-left:4px solid var(--warning);background:#FBF3E7;padding:14px 16px;border-radius:6px;font-size:13.3px;margin-bottom:16px;}
+.alert strong{display:block;margin-bottom:4px;}
+.alert.ok{border-left-color:var(--success);background:#EAF3EE;}
+.checkbox-line{display:flex;gap:9px;align-items:flex-start;font-size:13px;margin:10px 0 4px;}
+.checkbox-line input{margin-top:3px;accent-color:var(--red);}
 
-  /* Slide dots */
-  .slide-dots {
-    position: fixed;
-    bottom: 24px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 50;
-    display: flex;
-    gap: 8px;
-  }
+.score-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px;}
+@media (max-width:560px){.score-grid{grid-template-columns:1fr;}}
+.score-card{background:var(--grey-100);border-radius:9px;padding:15px 17px;}
+.score-card .k{font-size:11.5px;color:var(--grey-600);text-transform:uppercase;letter-spacing:.04em;}
+.score-card .v{font-family:var(--serif);font-size:21px;margin-top:2px;}
+.gauge{display:flex;gap:4px;margin:10px 0 2px;}
+.gauge .seg{flex:1;height:9px;border-radius:4px;background:var(--grey-300);}
+.gauge .seg.on{background:var(--red);}
+.niveau-badge{display:inline-block;background:var(--red);color:#fff;font-weight:700;font-size:13px;padding:5px 12px;border-radius:20px;}
+.choice-row{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 6px;}
+.choice-pill{border:1px solid var(--grey-300);border-radius:20px;padding:9px 17px;font-size:13px;cursor:pointer;}
+.choice-pill.selected{border-color:var(--red);background:var(--red-light);font-weight:600;}
+.choice-pill.disabled{opacity:.35;cursor:not-allowed;}
+.profile-name{font-family:var(--serif);font-size:21px;margin:4px 0 4px;}
+.muted{color:var(--grey-600);}
 
-  .dot {
-    width: 8px; height: 8px;
-    border-radius: 50%;
-    background: rgba(255,255,255,0.4);
-    border: 1px solid rgba(255,255,255,0.6);
-    cursor: pointer;
-    transition: background 0.3s, transform 0.3s;
-  }
-  .dot.active {
-    background: var(--gold);
-    border-color: var(--gold);
-    transform: scale(1.3);
-  }
+.alloc-table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:14px;}
+.alloc-table th,.alloc-table td{padding:8px;border-bottom:1px solid var(--grey-150);text-align:left;}
+.alloc-table th{color:var(--grey-600);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.03em;}
+.swatch{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:8px;}
+.chart-wrap{display:flex;align-items:center;gap:26px;flex-wrap:wrap;margin-top:10px;}
+.legend{display:flex;flex-direction:column;gap:9px;font-size:13.5px;}
+.legend-item{display:flex;align-items:center;}
 
-  /* ===== MAIN CONTENT ===== */
-  .page-wrapper {
-    position: relative;
-    z-index: 10;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    padding: 40px 20px 80px;
-  }
+.footer-note{margin-top:32px;font-size:11.3px;color:var(--grey-600);border-top:1px solid var(--grey-150);padding-top:14px;}
 
-  .container {
-    max-width: 680px;
-    width: 100%;
-    animation: fadeUp 0.8s ease both;
-  }
+/* ----- Mode administrateur ----- */
+.admin-tabs{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:18px;}
+.admin-tab{padding:8px 15px;border-radius:20px;border:1px solid var(--grey-300);background:#fff;font-size:12.5px;cursor:pointer;font-family:var(--sans);}
+.admin-tab.active{background:var(--ink);color:#fff;border-color:var(--ink);}
+.adm-question{border:1px solid var(--grey-150);border-radius:9px;padding:16px;margin-bottom:14px;background:#fdfcfa;}
+.adm-field{margin-bottom:10px;}
+.adm-field label{display:block;font-size:11.5px;color:var(--grey-600);margin-bottom:3px;}
+.adm-field input,.adm-field textarea{width:100%;padding:8px 10px;border:1px solid var(--grey-300);border-radius:6px;font-size:13.5px;font-family:var(--sans);}
+.adm-field textarea{min-height:54px;resize:vertical;}
+.adm-options{display:flex;flex-direction:column;gap:9px;margin:10px 0;}
+.adm-option{display:flex;gap:9px;align-items:center;flex-wrap:wrap;background:var(--grey-100);padding:9px;border-radius:7px;}
+.adm-option input[type=text]{flex:1;min-width:130px;padding:7px 9px;border:1px solid var(--grey-300);border-radius:6px;font-size:13px;}
+.adm-option input[type=number]{width:78px;padding:7px 9px;border:1px solid var(--grey-300);border-radius:6px;font-size:13px;}
+.adm-row{display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end;margin-top:6px;}
+.btn-mini{font-size:12.5px;padding:7px 13px;border-radius:6px;border:1px solid var(--grey-300);background:#fff;cursor:pointer;font-family:var(--sans);}
+.btn-mini.danger{border-color:var(--red);color:var(--red);}
+.btn-mini:disabled{opacity:.35;cursor:not-allowed;}
+.sum-ok{color:var(--success);font-size:12.5px;font-weight:600;margin-top:6px;}
+.sum-warn{color:var(--warning);font-size:12.5px;font-weight:600;margin-top:6px;}
+.adm-check{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--grey-600);}
+.admin-actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;}
 
-  @keyframes fadeUp {
-    from { opacity: 0; transform: translateY(24px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .header { text-align: center; margin-bottom: 48px; }
-
-  .badge {
-    display: inline-block;
-    font-size: 11px;
-    font-weight: 500;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--gold);
-    border: 1px solid rgba(200,151,58,0.5);
-    padding: 6px 16px;
-    border-radius: 2px;
-    margin-bottom: 20px;
-    background: rgba(200,151,58,0.12);
-  }
-
-  h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: clamp(26px, 5vw, 40px);
-    font-weight: 900;
-    line-height: 1.1;
-    color: #FFFFFF;
-    margin-bottom: 16px;
-    text-shadow: 0 2px 12px rgba(0,0,0,0.5);
-  }
-
-  h1 span { color: var(--gold-light); }
-
-  .subtitle {
-    font-size: 14px;
-    color: rgba(255,255,255,0.9);
-    letter-spacing: 0.03em;
-    line-height: 1.6;
-    text-shadow: 0 1px 6px rgba(0,0,0,0.5);
-  }
-
-  .divider {
-    width: 60px; height: 1px;
-    background: linear-gradient(90deg, transparent, var(--gold), transparent);
-    margin: 20px auto;
-  }
-
-  /* ===== DOCUMENT CARDS ===== */
-  .docs { display: flex; flex-direction: column; gap: 14px; }
-
-  .doc-card {
-    display: flex;
-    align-items: center;
-    gap: 20px;
-    background: rgba(22, 24, 32, 0.82);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 20px 24px;
-    text-decoration: none;
-    color: #FFFFFF;
-    position: relative;
-    overflow: hidden;
-    transition: border-color 0.3s, background 0.3s, transform 0.2s;
-    animation: fadeUp 0.8s ease both;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-  }
-
-  .doc-card:nth-child(1) { animation-delay: 0.1s; }
-  .doc-card:nth-child(2) { animation-delay: 0.2s; }
-  .doc-card:nth-child(3) { animation-delay: 0.3s; }
-
-  .doc-card::before {
-    content: '';
-    position: absolute;
-    left: 0; top: 0; bottom: 0;
-    width: 3px;
-    background: linear-gradient(180deg, var(--gold-light), var(--gold));
-    opacity: 0;
-    transition: opacity 0.3s;
-  }
-
-  .doc-card:hover {
-    border-color: rgba(200,151,58,0.6);
-    background: rgba(30, 32, 40, 0.95);
-    transform: translateX(4px);
-  }
-
-  .doc-card:hover::before { opacity: 1; }
-
-  .pdf-icon { width: 40px; height: 48px; flex-shrink: 0; }
-  .pdf-icon svg { width: 100%; height: 100%; }
-
-  .doc-info { flex: 1; min-width: 0; }
-
-  .doc-label {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 5px;
-  }
-
-  .doc-title {
-    font-family: 'Playfair Display', serif;
-    font-size: 14px;
-    font-weight: 700;
-    color: #FFFFFF;
-    line-height: 1.3;
-  }
-
-  .arrow {
-    flex-shrink: 0;
-    width: 34px; height: 34px;
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color 0.3s, background 0.3s, transform 0.3s;
-  }
-
-  .doc-card:hover .arrow {
-    border-color: var(--gold);
-    background: rgba(200,151,58,0.15);
-    transform: translateY(3px);
-  }
-
-  .arrow svg {
-    width: 13px; height: 13px;
-    fill: none;
-    stroke: var(--gold);
-    stroke-width: 2;
-  }
-
-  /* ===== IMAGE DOWNLOAD SECTION ===== */
-  .img-download-section {
-    margin-top: 20px;
-    background: rgba(22, 24, 32, 0.78);
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 18px 24px;
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-    animation: fadeUp 0.8s 0.4s ease both;
-  }
-
-  .img-download-title {
-    font-size: 10px;
-    font-weight: 500;
-    letter-spacing: 0.15em;
-    text-transform: uppercase;
-    color: var(--gold);
-    margin-bottom: 12px;
-  }
-
-  .img-download-btns {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-  }
-
-  .img-dl-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background: rgba(200,151,58,0.1);
-    border: 1px solid rgba(200,151,58,0.3);
-    border-radius: 6px;
-    padding: 10px 16px;
-    color: #FFFFFF;
-    text-decoration: none;
-    font-size: 13px;
-    font-family: 'DM Sans', sans-serif;
-    transition: background 0.2s, border-color 0.2s, transform 0.2s;
-    flex: 1;
-    min-width: 180px;
-    justify-content: center;
-  }
-
-  .img-dl-btn:hover {
-    background: rgba(200,151,58,0.22);
-    border-color: var(--gold);
-    transform: translateY(-2px);
-  }
-
-  .img-dl-btn svg {
-    width: 13px; height: 13px;
-    fill: none;
-    stroke: var(--gold);
-    stroke-width: 2;
-    flex-shrink: 0;
-  }
-
-  /* ===== FOOTER ===== */
-  .footer {
-    text-align: center;
-    margin-top: 28px;
-    font-size: 12px;
-    color: rgba(255,255,255,0.75);
-    letter-spacing: 0.05em;
-    line-height: 1.7;
-    animation: fadeUp 0.8s 0.5s ease both;
-    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
-  }
-
-  .footer strong { color: var(--gold-light); font-weight: 500; }
-
-  /* ===== HIDDEN ADMIN TRIGGER ===== */
-  #admin-trigger {
-    position: fixed;
-    bottom: 0; right: 0;
-    width: 30px; height: 30px;
-    cursor: default;
-    z-index: 9999;
-    background: transparent;
-  }
-
-  /* ===== ADMIN MODAL ===== */
-  .modal-overlay {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.85);
-    z-index: 10000;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(6px);
-  }
-  .modal-overlay.active { display: flex; }
-
-  .modal {
-    background: #161820;
-    border: 1px solid rgba(200,151,58,0.3);
-    border-radius: 10px;
-    padding: 40px;
-    width: 90%;
-    max-width: 420px;
-    position: relative;
-  }
-
-  .modal h2 {
-    font-family: 'Playfair Display', serif;
-    color: #FFFFFF;
-    font-size: 20px;
-    margin-bottom: 8px;
-  }
-
-  .modal p { color: #8A8580; font-size: 13px; margin-bottom: 24px; }
-
-  .modal input {
-    width: 100%;
-    background: #0D0E10;
-    border: 1px solid rgba(200,151,58,0.3);
-    border-radius: 6px;
-    padding: 12px 16px;
-    color: #FFFFFF;
-    font-size: 14px;
-    font-family: 'DM Sans', sans-serif;
-    outline: none;
-    margin-bottom: 16px;
-    transition: border-color 0.3s;
-  }
-  .modal input:focus { border-color: var(--gold); }
-
-  .modal button {
-    width: 100%;
-    background: var(--gold);
-    color: #0D0E10;
-    border: none;
-    border-radius: 6px;
-    padding: 12px;
-    font-size: 14px;
-    font-weight: 700;
-    font-family: 'DM Sans', sans-serif;
-    cursor: pointer;
-    transition: background 0.2s;
-  }
-  .modal button:hover { background: var(--gold-light); }
-
-  .modal-error { color: #e05a5a; font-size: 12px; margin-top: 8px; display: none; }
-
-  .modal-close {
-    position: absolute;
-    top: 14px; right: 14px;
-    background: none; border: none;
-    color: #8A8580; font-size: 18px;
-    cursor: pointer; width: auto; padding: 0;
-  }
-
-  /* ===== DASHBOARD ===== */
-  .dashboard {
-    display: none;
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.9);
-    z-index: 10000;
-    align-items: center;
-    justify-content: center;
-    backdrop-filter: blur(8px);
-  }
-  .dashboard.active { display: flex; }
-
-  .dashboard-inner {
-    background: #161820;
-    border: 1px solid rgba(200,151,58,0.3);
-    border-radius: 12px;
-    padding: 36px;
-    width: 90%;
-    max-width: 520px;
-    position: relative;
-  }
-
-  .dashboard-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 28px;
-  }
-
-  .dashboard-header h2 {
-    font-family: 'Playfair Display', serif;
-    color: #FFFFFF;
-    font-size: 20px;
-  }
-
-  .dash-close {
-    background: none;
-    border: 1px solid rgba(200,151,58,0.3);
-    color: #8A8580;
-    width: 32px; height: 32px;
-    border-radius: 50%;
-    font-size: 14px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: border-color 0.2s, color 0.2s;
-  }
-  .dash-close:hover { border-color: var(--gold); color: var(--gold); }
-
-  .stat-card {
-    background: #0D0E10;
-    border: 1px solid rgba(200,151,58,0.15);
-    border-radius: 8px;
-    padding: 18px 22px;
-    margin-bottom: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-  }
-
-  .stat-doc-name { font-size: 13px; color: #FFFFFF; font-weight: 500; line-height: 1.4; flex: 1; }
-
-  .stat-count {
-    font-family: 'Playfair Display', serif;
-    font-size: 30px;
-    font-weight: 900;
-    color: var(--gold);
-    flex-shrink: 0;
-  }
-
-  .stat-label { font-size: 10px; color: #8A8580; text-align: right; }
-  .stat-right { text-align: right; }
-
-  .dash-total {
-    margin-top: 20px;
-    padding-top: 18px;
-    border-top: 1px solid rgba(200,151,58,0.15);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .dash-total span { color: #8A8580; font-size: 13px; }
-  .dash-total strong { color: var(--gold); font-size: 20px; font-family: 'Playfair Display', serif; }
-
-  .dash-reset {
-    margin-top: 16px;
-    background: none;
-    border: 1px solid rgba(200,151,58,0.2);
-    color: #8A8580;
-    border-radius: 6px;
-    padding: 8px 16px;
-    font-size: 12px;
-    cursor: pointer;
-    font-family: 'DM Sans', sans-serif;
-    transition: border-color 0.2s, color 0.2s;
-    width: 100%;
-  }
-  .dash-reset:hover { border-color: #e05a5a; color: #e05a5a; }
+.modal-backdrop{position:fixed;inset:0;background:rgba(26,26,26,.55);display:flex;align-items:center;justify-content:center;padding:18px;z-index:50;}
+.modal-card{background:var(--paper);border-radius:12px;max-width:680px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:var(--shadow);}
+.modal-head{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:20px 24px;border-bottom:1px solid var(--grey-150);position:sticky;top:0;background:var(--paper);}
+.modal-head h2{font-family:var(--serif);font-size:19px;}
+.modal-close{background:none;border:1px solid var(--grey-300);border-radius:20px;padding:7px 16px;font-size:12.5px;cursor:pointer;font-family:var(--sans);}
+.modal-body{padding:6px 24px 24px;}
+.modal-body h3{font-family:var(--serif);font-size:16px;color:var(--red);margin:20px 0 8px;}
+.modal-body p{font-size:13.8px;margin:0 0 10px;}
 </style>
 </head>
 <body>
-
-<!-- SLIDESHOW BACKGROUND -->
-<div class="slideshow" id="slideshow">
-  <div class="slide active" id="slide1"><img src="image1.jpg" alt="Affiche IPO RENAPROV"/></div>
-  <div class="slide" id="slide2"><img src="image2.jpg" alt="Communiqué de presse RENAPROV"/></div>
-</div>
-
-<!-- Pause indicator -->
-<div class="pause-indicator" id="pauseIndicator" onclick="resumeSlideshow()">
-  ▶ Reprendre le diaporama
-</div>
-
-<!-- Slide dots -->
-<div class="slide-dots">
-  <div class="dot active" id="dot0" onclick="goToSlide(0)"></div>
-  <div class="dot" id="dot1" onclick="goToSlide(1)"></div>
-</div>
-
-<!-- MAIN CONTENT -->
-<div class="page-wrapper">
-  <div class="container">
-
-    <div class="header">
-      <div class="badge">Introduction en Bourse · BVMAC · Avril–Mai 2026</div>
-      <h1>Documents officiels<br><span>IPO RENAPROV</span></h1>
-      <div class="divider"></div>
-      <p class="subtitle">Téléchargez les documents de l'Appel Public à l'Épargne de<br>RENAPROV Finance S.A. — Visa COSUMAF N° COSUMAF-IPO1/26</p>
-    </div>
-
-    <div class="docs">
-
-      <a class="doc-card" href="BULLETIN-DE-SOUSCRIPTION-IPO-RENAPROV.pdf" download onclick="trackDownload('bulletin')">
-        <div class="pdf-icon">
-          <svg viewBox="0 0 44 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="44" height="52" rx="4" fill="#1E2028"/>
-            <rect width="44" height="52" rx="4" stroke="rgba(200,151,58,0.3)" stroke-width="1"/>
-            <path d="M8 0 L36 0 L44 8 L44 52 L8 52 Z" fill="#1A1C24"/>
-            <path d="M36 0 L36 8 L44 8" fill="none" stroke="rgba(200,151,58,0.4)" stroke-width="1"/>
-            <rect x="8" y="22" width="28" height="3" rx="1.5" fill="rgba(200,151,58,0.15)"/>
-            <rect x="8" y="28" width="22" height="2" rx="1" fill="rgba(200,151,58,0.1)"/>
-            <rect x="8" y="33" width="26" height="2" rx="1" fill="rgba(200,151,58,0.1)"/>
-            <text x="22" y="16" text-anchor="middle" font-family="sans-serif" font-size="7" font-weight="700" fill="#C8973A">PDF</text>
-          </svg>
-        </div>
-        <div class="doc-info">
-          <div class="doc-label">Document 1</div>
-          <div class="doc-title">BULLETIN DE SOUSCRIPTION IPO RENAPROV</div>
-        </div>
-        <div class="arrow">
-          <svg viewBox="0 0 14 14"><path d="M7 2v10M3 8l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-      </a>
-
-      <a class="doc-card" href="RIB-CENTRALISATION-APE-RENAPROV.pdf" download onclick="trackDownload('rib')">
-        <div class="pdf-icon">
-          <svg viewBox="0 0 44 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="44" height="52" rx="4" fill="#1E2028"/>
-            <rect width="44" height="52" rx="4" stroke="rgba(200,151,58,0.3)" stroke-width="1"/>
-            <path d="M8 0 L36 0 L44 8 L44 52 L8 52 Z" fill="#1A1C24"/>
-            <path d="M36 0 L36 8 L44 8" fill="none" stroke="rgba(200,151,58,0.4)" stroke-width="1"/>
-            <rect x="8" y="22" width="28" height="3" rx="1.5" fill="rgba(200,151,58,0.15)"/>
-            <rect x="8" y="28" width="22" height="2" rx="1" fill="rgba(200,151,58,0.1)"/>
-            <rect x="8" y="33" width="26" height="2" rx="1" fill="rgba(200,151,58,0.1)"/>
-            <text x="22" y="16" text-anchor="middle" font-family="sans-serif" font-size="7" font-weight="700" fill="#C8973A">PDF</text>
-          </svg>
-        </div>
-        <div class="doc-info">
-          <div class="doc-label">Document 2</div>
-          <div class="doc-title">RIB CENTRALISATION APE RENAPROV</div>
-        </div>
-        <div class="arrow">
-          <svg viewBox="0 0 14 14"><path d="M7 2v10M3 8l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-      </a>
-
-      <a class="doc-card" href="DOCUMENT-INFORMATION-IPO-RENAPROV.pdf" download onclick="trackDownload('info')">
-        <div class="pdf-icon">
-          <svg viewBox="0 0 44 52" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="44" height="52" rx="4" fill="#1E2028"/>
-            <rect width="44" height="52" rx="4" stroke="rgba(200,151,58,0.3)" stroke-width="1"/>
-            <path d="M8 0 L36 0 L44 8 L44 52 L8 52 Z" fill="#1A1C24"/>
-            <path d="M36 0 L36 8 L44 8" fill="none" stroke="rgba(200,151,58,0.4)" stroke-width="1"/>
-            <rect x="8" y="22" width="28" height="3" rx="1.5" fill="rgba(200,151,58,0.15)"/>
-            <rect x="8" y="28" width="22" height="2" rx="1" fill="rgba(200,151,58,0.1)"/>
-            <rect x="8" y="33" width="26" height="2" rx="1" fill="rgba(200,151,58,0.1)"/>
-            <text x="22" y="16" text-anchor="middle" font-family="sans-serif" font-size="7" font-weight="700" fill="#C8973A">PDF</text>
-          </svg>
-        </div>
-        <div class="doc-info">
-          <div class="doc-label">Document 3</div>
-          <div class="doc-title">DOCUMENT D'INFORMATION IPO RENAPROV</div>
-        </div>
-        <div class="arrow">
-          <svg viewBox="0 0 14 14"><path d="M7 2v10M3 8l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-      </a>
-
-    </div>
-
-    <!-- IMAGE DOWNLOADS -->
-    <div class="img-download-section">
-      <div class="img-download-title">📥 Télécharger les visuels</div>
-      <div class="img-download-btns">
-        <a class="img-dl-btn" href="image1.jpg" download="RENAPROV-IPO-Affiche.jpg">
-          <svg viewBox="0 0 14 14"><path d="M7 2v10M3 8l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Affiche IPO RENAPROV
-        </a>
-        <a class="img-dl-btn" href="image2.jpg" download="RENAPROV-Communique-de-presse.jpg">
-          <svg viewBox="0 0 14 14"><path d="M7 2v10M3 8l4 4 4-4" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          Communiqué de presse
-        </a>
-      </div>
-    </div>
-
-    <div class="footer">
-      Opération autorisée par la <strong>COSUMAF</strong> · Visa N° COSUMAF-IPO1/26 · 15 Avril 2026<br>
-      Arrangeur & Chef de file : <strong>Afriland Bourse & Investissement</strong> · Place de cotation : <strong>BVMAC</strong>
-    </div>
-
-  </div>
-</div>
-
-<!-- Zone secrète invisible (coin bas-droite) -->
-<div id="admin-trigger" onclick="openLoginModal()"></div>
-
-<!-- Modal Login Admin -->
-<div class="modal-overlay" id="loginModal">
-  <div class="modal">
-    <button class="modal-close" onclick="closeLoginModal()">✕</button>
-    <h2>Accès administrateur</h2>
-    <p>Entrez votre mot de passe pour accéder au tableau de bord.</p>
-    <input type="password" id="adminPassword" placeholder="Mot de passe" onkeydown="if(event.key==='Enter') checkPassword()"/>
-    <button onclick="checkPassword()">Accéder au tableau de bord</button>
-    <div class="modal-error" id="loginError">Mot de passe incorrect.</div>
-  </div>
-</div>
-
-<!-- Dashboard Admin -->
-<div class="dashboard" id="dashboard">
-  <div class="dashboard-inner">
-    <div class="dashboard-header">
-      <h2>📊 Tableau de bord</h2>
-      <button class="dash-close" onclick="closeDashboard()">✕</button>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-doc-name">BULLETIN DE SOUSCRIPTION<br>IPO RENAPROV</div>
-      <div class="stat-right">
-        <div class="stat-count" id="count-bulletin">0</div>
-        <div class="stat-label">téléchargements</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-doc-name">RIB CENTRALISATION<br>APE RENAPROV</div>
-      <div class="stat-right">
-        <div class="stat-count" id="count-rib">0</div>
-        <div class="stat-label">téléchargements</div>
-      </div>
-    </div>
-
-    <div class="stat-card">
-      <div class="stat-doc-name">DOCUMENT D'INFORMATION<br>IPO RENAPROV</div>
-      <div class="stat-right">
-        <div class="stat-count" id="count-info">0</div>
-        <div class="stat-label">téléchargements</div>
-      </div>
-    </div>
-
-    <div class="dash-total">
-      <span>Total des téléchargements</span>
-      <strong id="count-total">0</strong>
-    </div>
-
-    <button class="dash-reset" onclick="resetCounts()">🗑 Réinitialiser les compteurs</button>
-  </div>
-</div>
+<div id="app"></div>
 
 <script>
-  // ===== SLIDESHOW =====
-  let currentSlide = 0;
-  const totalSlides = 2;
-  let slideshowInterval = null;
-  let isPaused = false;
+/* =========================================================================
+   CONFIGURATION — modifiable directement ici, ou via le « Mode administrateur »
+   de l'outil (recommandé : tout ce qui est listé ci-dessous est éditable
+   depuis l'interface, sans toucher au code).
+   Étape suivante du chantier : cette même structure sera reprise dans des
+   tables Supabase pour une édition centralisée et persistante.
+   ========================================================================= */
+const CONFIG = {
+  organisation: "Afriland Bourse & Investissement",
+  adminPasscode: "admin2026",
 
-  function goToSlide(index) {
-    document.querySelectorAll('.slide').forEach((s, i) => {
-      s.classList.toggle('active', i === index);
-    });
-    document.querySelectorAll('.dot').forEach((d, i) => {
-      d.classList.toggle('active', i === index);
-    });
-    currentSlide = index;
-  }
+  identification: {
+    champs: [
+      { id: "nom", label: "Nom et prénoms", type: "text", requis: true },
+      { id: "dateNaissance", label: "Date de naissance", type: "date", requis: true },
+      { id: "statutMatrimonial", label: "Statut matrimonial", type: "select", requis: false, options: [
+        "Célibataire", "Marié(e)", "Divorcé(e) / Séparé(e)", "Veuf(ve)"
+      ]},
+      { id: "objectif", label: "Objectif principal du placement", type: "select", requis: true, options: [
+        "Conservation du capital en vue d'un projet",
+        "Constitution d'une épargne de précaution",
+        "Revenus complémentaires à court terme",
+        "Transmission de patrimoine",
+        "Revenus complémentaires à moyen ou long terme"
+      ]},
+      { id: "dateRemplissage", label: "Date", type: "date", requis: true }
+    ]
+  },
 
-  function nextSlide() {
-    goToSlide((currentSlide + 1) % totalSlides);
-  }
+  capacite: [
+    { id: "age", label: "Âge", options: [
+      { label: "Plus de 65 ans", points: 1 }, { label: "55 à 65 ans", points: 2 },
+      { label: "45 à 55 ans", points: 3 }, { label: "30 à 45 ans", points: 4 }, { label: "Moins de 30 ans", points: 5 }
+    ]},
+    { id: "horizon", label: "Horizon de placement envisagé", options: [
+      { label: "Moins de 1 an", points: 1 }, { label: "1 à 3 ans", points: 2 },
+      { label: "3 à 5 ans", points: 3 }, { label: "5 à 10 ans", points: 4 }, { label: "Plus de 10 ans", points: 5 }
+    ]},
+    { id: "patrimoine", label: "Patrimoine financier net (FCFA) — tranches provisoires, à valider", options: [
+      { label: "Moins de 5 000 000 FCFA", points: 1 }, { label: "5 000 000 à 20 000 000 FCFA", points: 2 },
+      { label: "20 000 000 à 50 000 000 FCFA", points: 3 }, { label: "50 000 000 à 150 000 000 FCFA", points: 4 },
+      { label: "Plus de 150 000 000 FCFA", points: 5 }
+    ]},
+    { id: "revenu", label: "Revenus annuels nets (salaire, pension, revenus locatifs, etc., hors revenus exceptionnels) — tranches provisoires, à valider", options: [
+      { label: "Moins de 1 200 000 FCFA / an", points: 1 }, { label: "1 200 000 à 4 000 000 FCFA / an", points: 2 },
+      { label: "4 000 000 à 10 000 000 FCFA / an", points: 3 }, { label: "10 000 000 à 25 000 000 FCFA / an", points: 4 },
+      { label: "Plus de 25 000 000 FCFA / an", points: 5 }
+    ]},
+    { id: "partInvestie", label: "Part de votre patrimoine que représente la somme à investir", options: [
+      { label: "Plus de 75 %", points: 1 }, { label: "50 à 75 %", points: 2 },
+      { label: "25 à 50 %", points: 3 }, { label: "10 à 25 %", points: 4 }, { label: "Moins de 10 %", points: 5 }
+    ]},
+    { id: "evolutionSituation", label: "Comment voyez-vous évoluer votre situation financière dans les 3 à 5 prochaines années ?", options: [
+      { label: "Je prévois une détérioration (hausse des dépenses, baisse des revenus, etc.)", points: 1 },
+      { label: "Je ne prévois aucun changement notable", points: 3 },
+      { label: "Je prévois une amélioration (avancement professionnel, héritage, vente d'un bien, etc.)", points: 5 }
+    ]},
+    { id: "depenseImprevue", label: "Face à une dépense imprévue importante, vous seriez amené(e) à :", options: [
+      { label: "Vendre tous mes investissements, même à perte", points: 1 },
+      { label: "Vendre une partie de mes investissements", points: 3 },
+      { label: "N'avoir aucune vente à effectuer", points: 5 }
+    ]}
+  ],
 
-  function startSlideshow() {
-    slideshowInterval = setInterval(nextSlide, 5000);
-  }
+  tolerance: [
+    { id: "reactionPerte30", label: "Si vos investissements perdent 30 % en un mois, comment réagissez-vous ?", options: [
+      { label: "Je récupère tout", points: 1 }, { label: "Je récupère une partie", points: 2 },
+      { label: "Je continue ma stratégie sans paniquer", points: 4 }, { label: "J'investis même un peu plus", points: 5 }
+    ]},
+    { id: "seuilMalaise", label: "À partir de quel niveau de baisse commenceriez-vous à être mal à l'aise ?", options: [
+      { label: "Toute baisse", points: 1 }, { label: "Une baisse d'au moins 15 %", points: 2 },
+      { label: "Une baisse d'au moins 30 %", points: 3 }, { label: "Une baisse d'au moins 50 %", points: 5 }
+    ]},
+    { id: "courbe", type: "courbes", label: "Parmi ces profils de fluctuation annuelle d'un portefeuille, lequel vous mettrait le plus à l'aise ?", options: [
+      { label: "A", points: 1, gain: 5, perte: 2 }, { label: "B", points: 2, gain: 10, perte: 5 },
+      { label: "C", points: 3, gain: 18, perte: 10 }, { label: "D", points: 4, gain: 28, perte: 18 },
+      { label: "E", points: 5, gain: 40, perte: 28 }
+    ]},
+    { id: "accordRisque", label: "« Je suis prêt(e) à investir une part importante de mon épargne dans des actifs risqués mais plus rentables »", options: [
+      { label: "Pas du tout d'accord", points: 1 }, { label: "Neutre", points: 3 }, { label: "Entièrement d'accord", points: 5 }
+    ]}
+  ],
 
-  function pauseSlideshow() {
-    if (!isPaused) {
-      clearInterval(slideshowInterval);
-      isPaused = true;
-      document.getElementById('pauseIndicator').classList.add('visible');
+  connaissance: {
+    instruments: ["Titres d'État (OTA/BTA)", "OPCVM / fonds d'investissement", "Actions cotées BRVM/BVMAC"],
+    niveauxConnaissance: ["Aucune", "Rudimentaire", "Moyenne", "Bonne", "Très bonne"],
+    niveauxExperience: ["Aucune", "1 à 2 ans / 1 à 9 opérations", "3 à 5 ans / 10 à 15 opérations", "6 à 9 ans / 16 à 25 opérations", "10 ans et plus / plus de 25 opérations"],
+    instrumentsSensibles: ["OPCVM / fonds d'investissement", "Actions cotées BRVM/BVMAC"]
+  },
+
+  baremeNiveaux: {
+    capacite: [{ min: 7, max: 12, niveau: 1 }, { min: 13, max: 18, niveau: 2 }, { min: 19, max: 24, niveau: 3 }, { min: 25, max: 30, niveau: 4 }, { min: 31, max: 35, niveau: 5 }],
+    tolerance: [{ min: 4, max: 7, niveau: 1 }, { min: 8, max: 10, niveau: 2 }, { min: 11, max: 13, niveau: 3 }, { min: 14, max: 16, niveau: 4 }, { min: 17, max: 20, niveau: 5 }]
+  },
+
+  profils: [
+    { niveau: 1, nom: "Faible (Prudent)", description: "Priorité à la préservation du capital ; rendement modeste et peu volatil.", horizon: "1 à 2 ans" },
+    { niveau: 2, nom: "Plutôt faible (Conservateur-équilibré)", description: "Léger surcroît de rendement recherché, avec de faibles fluctuations possibles.", horizon: "2 à 4 ans" },
+    { niveau: 3, nom: "Modéré (Équilibré)", description: "Fluctuations modérées acceptées en échange d'un potentiel de rendement plus élevé.", horizon: "4 à 6 ans" },
+    { niveau: 4, nom: "Plutôt fort (Dynamique)", description: "Croissance à long terme recherchée, fluctuations importantes et pertes temporaires possibles.", horizon: "6 à 8 ans" },
+    { niveau: 5, nom: "Fort (Offensif)", description: "Maximisation du potentiel de rendement à long terme ; forte volatilité acceptée.", horizon: "8 ans et plus" }
+  ],
+
+  allocation: [
+    { niveau: 1, obligataire: 80, opcvm: 10, actions: 0, liquidites: 10 },
+    { niveau: 2, obligataire: 55, opcvm: 25, actions: 10, liquidites: 10 },
+    { niveau: 3, obligataire: 35, opcvm: 25, actions: 30, liquidites: 10 },
+    { niveau: 4, obligataire: 15, opcvm: 20, actions: 55, liquidites: 10 },
+    { niveau: 5, obligataire: 0, opcvm: 10, actions: 80, liquidites: 10 }
+  ],
+  couleursAllocation: { obligataire: "#A6192E", opcvm: "#D98C99", actions: "#1A1A1A", liquidites: "#B8B2A8" },
+
+  // Contenu pédagogique affiché via le bouton « Comprendre mon profilage de risque ».
+  // Volontairement dépourvu de tout barème ou nombre de points : il explique le sens
+  // des questions, pas la manière dont elles sont notées.
+  explications: {
+    identification: {
+      intro: "Ces informations ne sont pas notées : elles aident votre conseiller à comprendre le contexte de votre projet, pas à calculer un score.",
+      criteres: [
+        { titre: "Statut matrimonial", texte: "Cette information éclaire la discussion avec votre conseiller (revenus du foyer, charges partagées, projets communs), mais n'influence pas votre score : son effet sur la capacité de risque dépend de trop de facteurs propres à chaque situation pour être réduit à une règle générale." },
+        { titre: "Objectif principal du placement", texte: "Il oriente le type de portefeuille recherché (sécuriser un projet précis, préparer sa retraite, transmettre un capital), mais ne modifie pas non plus le niveau de risque calculé : un même profil de risque peut servir des objectifs différents." }
+      ]
+    },
+    capacite: {
+      intro: "Cette partie mesure des faits objectifs sur votre situation financière, pas votre envie de prendre des risques — cela vient dans l'étape suivante. L'idée est de déterminer la marge de manœuvre dont vous disposez réellement, indépendamment de ce que vous ressentez.",
+      criteres: [
+        { titre: "Âge", texte: "Plus vous êtes jeune, plus vous avez de temps pour vous remettre d'une baisse de marché avant d'avoir besoin de cet argent. Exemple : une baisse de 20 % à 30 ans peut se rattraper sur plusieurs années ; la même baisse à 68 ans, juste avant la retraite, laisse beaucoup moins de temps pour la compenser." },
+        { titre: "Horizon de placement", texte: "Le principe est le même que pour l'âge : plus l'argent reste investi longtemps avant d'être nécessaire, plus on peut traverser des creux de marché temporaires sans être contraint de vendre au mauvais moment." },
+        { titre: "Patrimoine financier net", texte: "Un patrimoine plus large constitue un coussin de sécurité : il permet d'encaisser une perte sur une partie de ses actifs sans mettre en péril son niveau de vie global." },
+        { titre: "Revenus annuels", texte: "Un revenu régulier et confortable réduit la dépendance à son épargne investie pour les besoins courants, et permet de reconstituer plus vite un capital en cas de perte." },
+        { titre: "Part du patrimoine investie", texte: "Si la somme que vous envisagez d'investir ne représente qu'une petite partie de votre patrimoine total, même une perte importante sur cette somme n'a qu'un impact limité sur votre situation globale. À l'inverse, si elle représente l'essentiel de votre patrimoine, vous avez beaucoup moins de marge de manœuvre." },
+        { titre: "Anticipation d'évolution de votre situation financière", texte: "Une situation que vous anticipez stable ou en amélioration permet d'envisager plus de risque aujourd'hui ; une situation que vous anticipez voir se détériorer (départ à la retraite proche, baisse de revenus prévisible) appelle davantage de prudence." },
+        { titre: "Réaction à une dépense imprévue", texte: "Cette question révèle si l'argent que vous envisagez d'investir est réellement disponible, ou s'il est déjà engagé pour d'autres besoins. Si une dépense imprévue vous obligeait à tout revendre, c'est le signe que la part investie était en réalité trop importante par rapport à votre capacité réelle." }
+      ]
+    },
+    tolerance: {
+      intro: "Ici, on ne regarde plus les faits mais le ressenti : comment réagiriez-vous psychologiquement face aux fluctuations, indépendamment de ce que votre situation financière vous permettrait objectivement ? Deux personnes ayant exactement la même situation financière peuvent avoir des tolérances très différentes.",
+      criteres: [
+        { titre: "Réaction à une perte de 30 % en un mois", texte: "Cette question teste l'instinct de panique face à une chute brutale, par opposition à la capacité à garder le cap dans une stratégie de long terme." },
+        { titre: "Seuil de malaise", texte: "Elle identifie le point à partir duquel l'inconfort psychologique commence à apparaître, qu'il soit ou non justifié par les faits." },
+        { titre: "Courbes de fluctuation annuelle", texte: "Une façon visuelle et concrète de ressentir ce que signifie « accepter de la volatilité » avant de l'avoir réellement vécu, en comparant des profils de gain et de perte potentiels sur un an." },
+        { titre: "Accord avec la prise de risque", texte: "Une déclaration directe de votre appétence personnelle pour le risque, qui vient confirmer ou nuancer vos réponses aux questions précédentes." }
+      ]
+    },
+    connaissance: {
+      intro: "Cette partie ne modifie jamais votre profil de risque : elle sert uniquement de garde-fou pédagogique. Si le profil retenu est élevé alors que vous déclarez n'avoir aucune connaissance ni expérience des actions ou des OPCVM dynamiques, par exemple, le formulaire proposera un échange avec votre conseiller avant de valider, pour s'assurer que vous comprenez bien ce que vous vous engagez à faire.",
+      criteres: [
+        { titre: "Connaissance et expérience : deux notions différentes", texte: "La connaissance correspond à votre compréhension théorique d'un produit ; l'expérience correspond à votre pratique réelle (durée, nombre d'opérations). On peut très bien connaître un produit en théorie sans jamais y avoir investi, ou inversement avoir investi sans bien en comprendre tous les mécanismes." }
+      ]
     }
-  }
+  },
 
-  function resumeSlideshow() {
-    isPaused = false;
-    document.getElementById('pauseIndicator').classList.remove('visible');
-    startSlideshow();
+  // Connexion Supabase pour la collecte des réponses (clé publique anon : sans risque à exposer
+  // côté navigateur, à condition que les politiques RLS du projet restent correctement configurées).
+  supabase: {
+    url: "https://vkibzqmblzjqjwnzhgfn.supabase.co",
+    anonKey: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZraWJ6cW1ibHpqcWp3bnpoZ2ZuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0MTQwMTEsImV4cCI6MjA5NTk5MDAxMX0.18YPwfUg5PZ-7eQSf7oBBerwnFWDPdv6B2hDML_P704",
+    table: "reponses_profil_risque"
   }
+};
 
-  // Clic sur le fond = pause/reprise
-  document.getElementById('slideshow').addEventListener('click', function() {
-    if (isPaused) {
-      resumeSlideshow();
-    } else {
-      pauseSlideshow();
-    }
+const STEP_LABELS = ["Identification", "Capacité financière", "Tolérance au risque", "Connaissance & expérience", "Résultat"];
+const ADMIN_TABS = [
+  { key: "identite", label: "Identité de l'outil" },
+  { key: "identification", label: "Identification client" },
+  { key: "capacite", label: "Capacité financière" },
+  { key: "tolerance", label: "Tolérance au risque" },
+  { key: "connaissance", label: "Connaissance & expérience" },
+  { key: "profils", label: "Profils & allocation" },
+  { key: "explications", label: "Comprendre (pédagogie)" },
+  { key: "reponses", label: "Réponses reçues" },
+  { key: "export", label: "Sauvegarde" }
+];
+
+/* ----------------------------- UTILITAIRES ----------------------------- */
+function esc(s) { return String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;").replace(/>/g, "&gt;"); }
+function getAt(obj, path) { return path.split(".").reduce((o, k) => o[/^\d+$/.test(k) ? Number(k) : k], obj); }
+function setAt(obj, path, value) {
+  const keys = path.split(".");
+  const last = keys.pop();
+  const parent = keys.reduce((o, k) => o[/^\d+$/.test(k) ? Number(k) : k], obj);
+  parent[/^\d+$/.test(last) ? Number(last) : last] = value;
+}
+function removeAt(obj, path) {
+  const keys = path.split(".");
+  const idx = Number(keys.pop());
+  const parent = keys.reduce((o, k) => o[/^\d+$/.test(k) ? Number(k) : k], obj);
+  parent.splice(idx, 1);
+}
+function hexToRgb(hex) { const c = hex.replace("#", ""); return { r: parseInt(c.substr(0, 2), 16), g: parseInt(c.substr(2, 2), 16), b: parseInt(c.substr(4, 2), 16) }; }
+function luminance(hex) {
+  const { r, g, b } = hexToRgb(hex);
+  const lin = v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+  return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+}
+function textColorFor(bgHex) {
+  const L = luminance(bgHex);
+  const contrastWhite = 1.05 / (L + 0.05);
+  const contrastBlack = (L + 0.05) / 0.05;
+  return contrastBlack > contrastWhite ? "#1A1A1A" : "#FFFFFF";
+}
+
+/* ----------------------------- ÉTAT ----------------------------- */
+const todayISO = new Date().toISOString().slice(0, 10);
+function freshIdentification() {
+  const obj = {};
+  CONFIG.identification.champs.forEach(c => { obj[c.id] = (c.id === "dateRemplissage") ? todayISO : ""; });
+  return obj;
+}
+function freshState() {
+  return { step: 0, identification: freshIdentification(), capacite: {}, tolerance: {}, connaissance: {}, niveauChoisi: null, motifEcart: "", gardeFouAck: false, valide: false };
+}
+let state = freshState();
+let dernierResultat = null;
+let mode = "client"; // "client" | "admin"
+let adminSection = "identite";
+let showExplanation = false;
+
+/* ------------------------- MOTEUR DE CALCUL ------------------------- */
+function calcScore(answers, blocConfig) {
+  let total = 0;
+  blocConfig.forEach(q => { const idx = answers[q.id]; if (idx !== undefined && q.options[idx]) total += q.options[idx].points; });
+  return total;
+}
+function maxScore(blocConfig) {
+  return blocConfig.reduce((sum, q) => sum + Math.max(...q.options.map(o => o.points)), 0);
+}
+function niveauFromScore(score, bareme) { const found = bareme.find(b => score >= b.min && score <= b.max); return found ? found.niveau : 1; }
+function calculerResultat() {
+  const scoreCap = calcScore(state.capacite, CONFIG.capacite);
+  const scoreTol = calcScore(state.tolerance, CONFIG.tolerance);
+  const niveauCap = niveauFromScore(scoreCap, CONFIG.baremeNiveaux.capacite);
+  const niveauTol = niveauFromScore(scoreTol, CONFIG.baremeNiveaux.tolerance);
+  return { scoreCap, scoreTol, niveauCap, niveauTol, niveauCalcule: Math.min(niveauCap, niveauTol) };
+}
+function gardeFouDeclenche(niveauRetenu) {
+  if (niveauRetenu < 4) return false;
+  return CONFIG.connaissance.instrumentsSensibles.some(instr => {
+    const rep = state.connaissance[instr];
+    if (!rep || rep.connaissance === undefined || rep.experience === undefined) return true;
+    return rep.connaissance === 0 || rep.experience === 0;
   });
+}
+function profilParNiveau(n) { return CONFIG.profils.find(p => p.niveau === n); }
+function allocationParNiveau(n) { return CONFIG.allocation.find(a => a.niveau === n); }
 
-  startSlideshow();
+/* ----------------------------- VALIDATION PAR ÉTAPE ----------------------------- */
+function validateStep(i) {
+  if (i === 0) return CONFIG.identification.champs.every(c => !c.requis || (state.identification[c.id] || "").toString().trim() !== "");
+  if (i === 1) return CONFIG.capacite.every(q => state.capacite[q.id] !== undefined);
+  if (i === 2) return CONFIG.tolerance.every(q => state.tolerance[q.id] !== undefined);
+  if (i === 3) return CONFIG.connaissance.instruments.every(instr => { const r = state.connaissance[instr]; return r && r.connaissance !== undefined && r.experience !== undefined; });
+  return true;
+}
 
-  // ===== DOWNLOAD TRACKING =====
-  function getCounts() {
-    return {
-      bulletin: parseInt(localStorage.getItem('dl_bulletin') || '0'),
-      rib:      parseInt(localStorage.getItem('dl_rib')      || '0'),
-      info:     parseInt(localStorage.getItem('dl_info')     || '0'),
-    };
-  }
-
-  function trackDownload(key) {
-    const current = parseInt(localStorage.getItem('dl_' + key) || '0');
-    localStorage.setItem('dl_' + key, current + 1);
-  }
-
-  function updateDashboard() {
-    const c = getCounts();
-    document.getElementById('count-bulletin').textContent = c.bulletin;
-    document.getElementById('count-rib').textContent      = c.rib;
-    document.getElementById('count-info').textContent     = c.info;
-    document.getElementById('count-total').textContent    = c.bulletin + c.rib + c.info;
-  }
-
-  function resetCounts() {
-    if (confirm('Réinitialiser tous les compteurs ?')) {
-      localStorage.removeItem('dl_bulletin');
-      localStorage.removeItem('dl_rib');
-      localStorage.removeItem('dl_info');
-      updateDashboard();
-    }
-  }
-
-  // ===== ADMIN LOGIN =====
-  const ADMIN_PASSWORD = 'akee@renaprov2026!';
-
-  function openLoginModal() {
-    document.getElementById('loginModal').classList.add('active');
-    document.getElementById('adminPassword').value = '';
-    document.getElementById('loginError').style.display = 'none';
-    setTimeout(() => document.getElementById('adminPassword').focus(), 100);
-  }
-
-  function closeLoginModal() {
-    document.getElementById('loginModal').classList.remove('active');
-  }
-
-  function checkPassword() {
-    const pwd = document.getElementById('adminPassword').value;
-    if (pwd === ADMIN_PASSWORD) {
-      closeLoginModal();
-      updateDashboard();
-      document.getElementById('dashboard').classList.add('active');
-    } else {
-      document.getElementById('loginError').style.display = 'block';
-    }
-  }
-
-  function closeDashboard() {
-    document.getElementById('dashboard').classList.remove('active');
-  }
-
-  document.addEventListener('keydown', function(e) {
-    if (e.key === 'Escape') {
-      closeLoginModal();
-      closeDashboard();
-    }
+/* ----------------------------- RENDU CLIENT : RAIL ----------------------------- */
+function renderRail() {
+  let html = "";
+  STEP_LABELS.forEach((lbl, i) => {
+    let cls = "step";
+    if (i === state.step) cls += " active"; else if (i < state.step) cls += " done";
+    html += `<div class="${cls}" data-action="goto" data-step="${i}" style="cursor:${i <= state.step ? "pointer" : "default"}">
+      <div class="num">${i + 1}</div><div class="label">${lbl}</div></div>`;
+    if (i < STEP_LABELS.length - 1) html += `<div class="connector ${i < state.step ? "done" : ""}"></div>`;
   });
+  return html;
+}
+
+/* ----------------------------- RENDU CLIENT : QUESTIONS ----------------------------- */
+function renderOptionQuestion(q, answers, bloc) {
+  const opts = q.options.map((opt, idx) => {
+    const checked = answers[q.id] === idx;
+    return `<label class="option ${checked ? "selected" : ""}">
+      <input type="radio" name="${bloc}-${q.id}" value="${idx}" data-bloc="${bloc}" data-qid="${q.id}" ${checked ? "checked" : ""}>
+      <span class="opt-text">${esc(opt.label)}</span></label>`;
+  }).join("");
+  return `<div class="question"><div class="q-label">${esc(q.label)}</div><div class="options">${opts}</div></div>`;
+}
+function renderCourbeQuestion(q, answers) {
+  const maxAbs = Math.max(...q.options.map(o => Math.max(o.gain, o.perte)));
+  const cards = q.options.map((opt, idx) => {
+    const hPos = Math.max(4, Math.round((opt.gain / maxAbs) * 30));
+    const hNeg = Math.max(4, Math.round((opt.perte / maxAbs) * 30));
+    const sel = answers[q.id] === idx;
+    return `<div class="curve-card ${sel ? "selected" : ""}" data-action="select-courbe" data-qid="${q.id}" data-idx="${idx}">
+      <div class="val-pos">+${opt.gain}%</div>
+      <div class="curve-bars">
+        <div class="half top"><div class="bar pos" style="height:${hPos}px"></div></div>
+        <div class="baseline"></div>
+        <div class="half bottom"><div class="bar neg" style="height:${hNeg}px"></div></div>
+      </div>
+      <div class="val-neg">-${opt.perte}%</div>
+      <div class="lbl">${esc(opt.label)}</div>
+    </div>`;
+  }).join("");
+  return `<div class="question"><div class="q-label">${esc(q.label)}</div><div class="curve-grid">${cards}</div></div>`;
+}
+function renderBloc(blocConfig, answers, blocKey) {
+  return blocConfig.map(q => q.type === "courbes" ? renderCourbeQuestion(q, answers) : renderOptionQuestion(q, answers, blocKey)).join("");
+}
+
+/* ----------------------------- RENDU CLIENT : ÉTAPES ----------------------------- */
+function renderStep0() {
+  const d = state.identification;
+  const champs = CONFIG.identification.champs.map(c => {
+    if (c.type === "select") {
+      const opts = c.options.map(o => `<option value="${esc(o)}" ${d[c.id] === o ? "selected" : ""}>${esc(o)}</option>`).join("");
+      return `<div class="field"><label>${esc(c.label)}${c.requis ? "" : " (optionnel)"}</label><select data-field="${c.id}">
+        <option value="">— Sélectionner —</option>${opts}</select></div>`;
+    }
+    return `<div class="field"><label>${esc(c.label)}</label><input type="${c.type}" data-field="${c.id}" value="${esc(d[c.id] || "")}"></div>`;
+  }).join("");
+  return `<h2>Identification et objectif</h2>
+    <p class="lead">Ces informations n'entrent pas dans le calcul du score de risque ; elles orientent simplement le conseil.</p>
+    <button class="btn btn-ghost" style="margin-bottom:20px;" data-action="show-explanation">Comprendre mon profilage de risque</button>
+    ${champs}
+    <div class="btn-row"><span></span><button class="btn btn-primary" data-action="next" ${validateStep(0) ? "" : "disabled"}>Continuer</button></div>`;
+}
+function renderStep1() {
+  return `<h2>Capacité à prendre des risques</h2><p class="lead">Cinq questions factuelles sur votre situation financière. Tranches en FCFA provisoires.</p>
+    ${renderBloc(CONFIG.capacite, state.capacite, "capacite")}
+    <div class="btn-row"><button class="btn btn-ghost" data-action="prev">Retour</button>
+    <button class="btn btn-primary" data-action="next" ${validateStep(1) ? "" : "disabled"}>Continuer</button></div>`;
+}
+function renderStep2() {
+  return `<h2>Tolérance au risque</h2><p class="lead">Quatre questions sur votre réaction face aux fluctuations de marché.</p>
+    ${renderBloc(CONFIG.tolerance, state.tolerance, "tolerance")}
+    <div class="btn-row"><button class="btn btn-ghost" data-action="prev">Retour</button>
+    <button class="btn btn-primary" data-action="next" ${validateStep(2) ? "" : "disabled"}>Continuer</button></div>`;
+}
+function renderStep3() {
+  const rows = CONFIG.connaissance.instruments.map(instr => {
+    const rep = state.connaissance[instr] || {};
+    const mkOpts = (field, echelle) => echelle.map((lvl, i) => `<option value="${i}" ${rep[field] === i ? "selected" : ""}>${esc(lvl)}</option>`).join("");
+    return `<tr><td>${esc(instr)}</td>
+      <td><select data-instr="${esc(instr)}" data-field="connaissance"><option value="">—</option>${mkOpts("connaissance", CONFIG.connaissance.niveauxConnaissance)}</select></td>
+      <td><select data-instr="${esc(instr)}" data-field="experience"><option value="">—</option>${mkOpts("experience", CONFIG.connaissance.niveauxExperience)}</select></td></tr>`;
+  }).join("");
+  return `<h2>Connaissance et expérience des produits</h2>
+    <p class="lead">Limité aux instruments réellement accessibles sur la BRVM et la BVMAC. Ne modifie pas le score : sert de garde-fou pédagogique.</p>
+    <table class="grid-connaissance"><thead><tr><th>Instrument</th><th>Connaissance</th><th>Expérience</th></tr></thead><tbody>${rows}</tbody></table>
+    <div class="btn-row"><button class="btn btn-ghost" data-action="prev">Retour</button>
+    <button class="btn btn-primary" data-action="next" ${validateStep(3) ? "" : "disabled"}>Voir mon profil</button></div>`;
+}
+function renderGauge(niveau) { let s = ""; for (let i = 1; i <= 5; i++) s += `<div class="seg ${i <= niveau ? "on" : ""}"></div>`; return `<div class="gauge">${s}</div>`; }
+function allocItems(alloc) {
+  return [
+    ["Titres d'État (OTA/BTA) + DAT", alloc.obligataire, CONFIG.couleursAllocation.obligataire],
+    ["OPCVM obligataires", alloc.opcvm, CONFIG.couleursAllocation.opcvm],
+    ["Actions BRVM/BVMAC", alloc.actions, CONFIG.couleursAllocation.actions],
+    ["Liquidités", alloc.liquidites, CONFIG.couleursAllocation.liquidites]
+  ];
+}
+function renderDonutLegend(alloc) {
+  return allocItems(alloc).filter(([, v]) => v > 0).map(([lbl, , c]) => `<div class="legend-item"><span class="swatch" style="background:${c}"></span>${esc(lbl)}</div>`).join("");
+}
+function renderAllocTable(alloc) {
+  const rows = allocItems(alloc).map(([lbl, val, c]) => `<tr><td><span class="swatch" style="background:${c}"></span>${esc(lbl)}</td><td>${val} %</td></tr>`).join("");
+  return `<table class="alloc-table"><thead><tr><th>Classe d'actifs</th><th>Poids cible</th></tr></thead><tbody>${rows}</tbody></table>`;
+}
+function renderStep4() {
+  if (!dernierResultat) dernierResultat = calculerResultat();
+  const r = dernierResultat;
+  if (state.niveauChoisi === null) state.niveauChoisi = r.niveauCalcule;
+
+  if (!state.valide) {
+    const minN = Math.max(1, r.niveauCalcule - 1), maxN = Math.min(5, r.niveauCalcule + 1);
+    const choixHtml = [1, 2, 3, 4, 5].map(n => {
+      const dispo = n >= minN && n <= maxN, sel = state.niveauChoisi === n;
+      return `<div class="choice-pill ${sel ? "selected" : ""} ${dispo ? "" : "disabled"}" ${dispo ? `data-action="choisir-niveau" data-niveau="${n}"` : ""}>Niveau ${n}${n === r.niveauCalcule ? " (calculé)" : ""}</div>`;
+    }).join("");
+    const ecart = state.niveauChoisi !== r.niveauCalcule;
+    const gf = gardeFouDeclenche(state.niveauChoisi);
+    const peutValider = (!ecart || state.motifEcart.trim() !== "") && (!gf || state.gardeFouAck);
+    return `<h2>Votre profil de risque</h2><p class="lead">Vérifiez le résultat, puis confirmez ou ajustez votre niveau avant validation définitive.</p>
+      <div class="score-grid">
+        <div class="score-card"><div class="k">Capacité à prendre des risques</div><div class="v">${r.scoreCap} / ${maxScore(CONFIG.capacite)} — Niveau ${r.niveauCap}</div></div>
+        <div class="score-card"><div class="k">Tolérance au risque</div><div class="v">${r.scoreTol} / ${maxScore(CONFIG.tolerance)} — Niveau ${r.niveauTol}</div></div>
+      </div>
+      <div class="alert ok"><strong>Profil calculé : Niveau ${r.niveauCalcule} — ${esc(profilParNiveau(r.niveauCalcule).nom)}</strong>
+      Le profil retenu ne peut pas dépasser le niveau le plus prudent entre la capacité et la tolérance.</div>
+      <div class="field"><label>Niveau que vous souhaitez retenir (écart maximal d'un niveau autorisé)</label><div class="choice-row">${choixHtml}</div></div>
+      ${ecart ? `<div class="field"><label>Merci de préciser la raison de cet écart (obligatoire, conservé dans votre dossier)</label><textarea id="champ-motifEcart">${esc(state.motifEcart)}</textarea></div>` : ""}
+      ${gf ? `<div class="alert"><strong>Vérification complémentaire requise</strong>Le niveau retenu suppose une exposition significative aux actions ou aux OPCVM dynamiques, alors que vous avez déclaré une connaissance ou une expérience nulle sur ces instruments. Un entretien avec votre conseiller est requis avant validation.
+      <div class="checkbox-line"><input type="checkbox" id="champ-gardeFouAck" ${state.gardeFouAck ? "checked" : ""}><label for="champ-gardeFouAck">Je confirme avoir échangé avec mon conseiller sur ce point.</label></div></div>` : ""}
+      <div class="btn-row"><button class="btn btn-ghost" data-action="prev">Retour</button>
+      <button class="btn btn-primary" data-action="valider-profil" ${peutValider ? "" : "disabled"}>Valider mon profil</button></div>`;
+  }
+
+  const profil = profilParNiveau(state.niveauChoisi), alloc = allocationParNiveau(state.niveauChoisi);
+  return `<h2>Profil validé</h2><div class="niveau-badge">Niveau ${profil.niveau}</div>
+    <div class="profile-name">${esc(profil.nom)}</div><p class="muted">${esc(profil.description)}</p>
+    ${renderGauge(profil.niveau)}<p class="muted" style="font-size:12.5px;">Horizon de placement minimal recommandé : ${esc(profil.horizon)}</p>
+    <div id="save-status" class="muted" style="font-size:12px;margin-top:6px;"></div>
+    <h2 style="margin-top:24px;">Allocation stratégique indicative</h2>
+    <div class="chart-wrap"><canvas id="donutCanvas"></canvas><div class="legend">${renderDonutLegend(alloc)}</div></div>
+    ${renderAllocTable(alloc)}
+    <div class="btn-row"><button class="btn btn-ghost" data-action="modifier-profil">Revoir mes réponses</button>
+    <button class="btn btn-primary" data-action="telecharger-pdf">Télécharger le PDF</button></div>`;
+}
+
+/* ----------------------------- RENDU ADMINISTRATEUR ----------------------------- */
+function renderSimpleListEditor(path, arr, addLabel) {
+  const items = arr.map((v, i) => `<div class="adm-option"><input type="text" data-path="${path}.${i}" value="${esc(v)}">
+    <button class="btn-mini" data-action="remove-item" data-path="${path}.${i}" ${arr.length > 1 ? "" : "disabled"}>Supprimer</button></div>`).join("");
+  return `<div class="adm-options">${items}</div><button class="btn-mini" data-action="add-list-item" data-path="${path}">${addLabel}</button>`;
+}
+function renderOptionEditor(basePath, opt, idx, canRemove) {
+  const extra = ("gain" in opt) ? `
+    <div class="adm-field" style="width:90px;"><label>Gain (%)</label><input type="number" data-path="${basePath}.${idx}.gain" data-type="number" value="${opt.gain}"></div>
+    <div class="adm-field" style="width:90px;"><label>Perte (%)</label><input type="number" data-path="${basePath}.${idx}.perte" data-type="number" value="${opt.perte}"></div>` : "";
+  return `<div class="adm-option">
+    <input type="text" data-path="${basePath}.${idx}.label" value="${esc(opt.label)}" placeholder="Libellé">
+    <span style="font-size:11.5px;color:var(--grey-600);">pts</span>
+    <input type="number" data-path="${basePath}.${idx}.points" data-type="number" value="${opt.points}">
+    ${extra}
+    <button class="btn-mini danger" data-action="remove-item" data-path="${basePath}.${idx}" ${canRemove ? "" : "disabled"}>Supprimer</button>
+  </div>`;
+}
+function renderQuestionEditor(blocKey, questions) {
+  return questions.map((q, qi) => {
+    const basePathOptions = `${blocKey}.${qi}.options`;
+    const isCourbe = q.options[0] && ("gain" in q.options[0]);
+    const optsHtml = q.options.map((o, oi) => renderOptionEditor(basePathOptions, o, oi, q.options.length > 1)).join("");
+    return `<div class="adm-question">
+      <div class="adm-field"><label>Intitulé de la question</label><input type="text" data-path="${blocKey}.${qi}.label" value="${esc(q.label)}"></div>
+      <div class="adm-options">${optsHtml}</div>
+      <div class="adm-row">
+        <button class="btn-mini" data-action="add-option" data-path="${basePathOptions}" data-template="${isCourbe ? "courbe" : "simple"}">+ Ajouter une réponse</button>
+        <button class="btn-mini danger" data-action="remove-item" data-path="${blocKey}.${qi}" ${questions.length > 1 ? "" : "disabled"}>Supprimer la question</button>
+      </div></div>`;
+  }).join("");
+}
+function renderAdminIdentite() {
+  return `<p class="lead">Nom affiché en en-tête de l'outil — utile si vous réutilisez ce questionnaire pour une autre structure (par exemple Africa Diamond Invest à Lomé).</p>
+    <div class="adm-field"><label>Nom de l'organisation</label><input type="text" data-path="organisation" value="${esc(CONFIG.organisation)}"></div>
+    <div class="adm-field"><label>Mot de passe du mode administrateur</label><input type="text" data-path="adminPasscode" value="${esc(CONFIG.adminPasscode)}"></div>
+    <p class="lead" style="font-size:12px;">Ce mot de passe est un simple filtre d'accès, pas une protection de sécurité réelle : toute personne consultant le code source de la page peut le voir. Une authentification réelle sera mise en place lors du raccordement à Supabase.</p>
+    <div style="font-weight:700;margin:18px 0 8px;">Connexion Supabase</div>
+    <div class="adm-field"><label>URL du projet (sans /rest/v1/)</label><input type="text" data-path="supabase.url" value="${esc(CONFIG.supabase.url)}"></div>
+    <div class="adm-field"><label>Clé publique anon</label><input type="text" data-path="supabase.anonKey" value="${esc(CONFIG.supabase.anonKey)}"></div>
+    <div class="adm-field" style="max-width:320px;"><label>Nom de la table</label><input type="text" data-path="supabase.table" value="${esc(CONFIG.supabase.table)}"></div>
+    <p class="lead" style="font-size:12px;">Après une modification ici, rechargez la page pour réinitialiser la connexion (elle n'est établie qu'une fois, au démarrage).</p>`;
+}
+function renderAdminIdentification() {
+  const items = CONFIG.identification.champs.map((c, ci) => {
+    let inner = `<div class="adm-field"><label>Libellé du champ</label><input type="text" data-path="identification.champs.${ci}.label" value="${esc(c.label)}"></div>`;
+    if (c.type === "select") inner += renderSimpleListEditor(`identification.champs.${ci}.options`, c.options, "+ Ajouter un choix");
+    return `<div class="adm-question">${inner}</div>`;
+  }).join("");
+  return `<p class="lead">Seuls les libellés et les listes de choix sont modifiables ici ; les champs Nom et Dates restent fixes.</p>${items}`;
+}
+function renderAdminConnaissance() {
+  const connaissanceEditor = renderSimpleListEditor("connaissance.niveauxConnaissance", CONFIG.connaissance.niveauxConnaissance, "+ Ajouter un niveau");
+  const experienceEditor = renderSimpleListEditor("connaissance.niveauxExperience", CONFIG.connaissance.niveauxExperience, "+ Ajouter un niveau");
+  const instrItems = CONFIG.connaissance.instruments.map((instr, i) => {
+    const sensible = CONFIG.connaissance.instrumentsSensibles.includes(instr);
+    return `<div class="adm-option"><input type="text" data-path="connaissance.instruments.${i}" value="${esc(instr)}">
+      <label class="adm-check"><input type="checkbox" data-action="toggle-sensible" data-instrument-index="${i}" ${sensible ? "checked" : ""}>Déclenche le garde-fou</label>
+      <button class="btn-mini" data-action="remove-item" data-path="connaissance.instruments.${i}" ${CONFIG.connaissance.instruments.length > 1 ? "" : "disabled"}>Supprimer</button></div>`;
+  }).join("");
+  return `<p class="lead">Échelle de connaissance (colonne « Connaissance ») :</p>${connaissanceEditor}
+    <p class="lead" style="margin-top:18px;">Échelle d'expérience (colonne « Expérience ») :</p>${experienceEditor}
+    <p class="lead" style="margin-top:18px;">Instruments financiers évalués :</p><div class="adm-options">${instrItems}</div>
+    <button class="btn-mini" data-action="add-instrument">+ Ajouter un instrument</button>`;
+}
+function renderAdminProfils() {
+  return CONFIG.profils.map((p, i) => {
+    const a = CONFIG.allocation[i], sum = a.obligataire + a.opcvm + a.actions + a.liquidites;
+    return `<div class="adm-question"><div style="font-weight:700;margin-bottom:8px;">Niveau ${p.niveau}</div>
+      <div class="adm-field"><label>Nom du profil</label><input type="text" data-path="profils.${i}.nom" value="${esc(p.nom)}"></div>
+      <div class="adm-field"><label>Description</label><textarea data-path="profils.${i}.description">${esc(p.description)}</textarea></div>
+      <div class="adm-field" style="max-width:220px;"><label>Horizon minimal</label><input type="text" data-path="profils.${i}.horizon" value="${esc(p.horizon)}"></div>
+      <div class="adm-row">
+        <div class="adm-field" style="width:140px;"><label>Titres d'État + DAT (%)</label><input type="number" data-path="allocation.${i}.obligataire" data-type="number" value="${a.obligataire}"></div>
+        <div class="adm-field" style="width:140px;"><label>OPCVM obligataires (%)</label><input type="number" data-path="allocation.${i}.opcvm" data-type="number" value="${a.opcvm}"></div>
+        <div class="adm-field" style="width:140px;"><label>Actions BRVM/BVMAC (%)</label><input type="number" data-path="allocation.${i}.actions" data-type="number" value="${a.actions}"></div>
+        <div class="adm-field" style="width:140px;"><label>Liquidités (%)</label><input type="number" data-path="allocation.${i}.liquidites" data-type="number" value="${a.liquidites}"></div>
+      </div>
+      <div id="sum-${i}" class="${sum === 100 ? "sum-ok" : "sum-warn"}">Somme actuelle : ${sum}% ${sum === 100 ? "✓" : "— doit totaliser 100%"}</div>
+    </div>`;
+  }).join("");
+}
+function renderAdminExport() {
+  return `<p class="lead">Sauvegardez votre configuration actuelle dans un fichier, ou restaurez une configuration précédemment exportée.</p>
+    <div class="admin-actions">
+      <button class="btn btn-primary" data-action="export-config">Exporter la configuration (JSON)</button>
+      <label class="btn btn-ghost" style="cursor:pointer;">Importer une configuration<input type="file" id="import-file" accept="application/json" style="display:none;"></label>
+    </div>
+    <p class="lead" style="margin-top:16px;font-size:12px;">Tant que l'outil n'est pas connecté à Supabase, ces fichiers sont le seul moyen de conserver vos modifications d'une session à l'autre : exportez avant de fermer le navigateur si vous avez changé des questions.</p>`;
+}
+function renderAdminExplications() {
+  const sections = [["identification", "Identification"], ["capacite", "Capacité financière"], ["tolerance", "Tolérance au risque"], ["connaissance", "Connaissance & expérience"]];
+  return `<p class="lead">Ce texte est affiché au client via le bouton « Comprendre mon profilage de risque ». Évitez d'y faire figurer un barème ou un nombre de points.</p>` +
+    sections.map(([key, label]) => {
+      const sec = CONFIG.explications[key];
+      const critItems = sec.criteres.map((c, i) => `<div class="adm-option" style="flex-direction:column;align-items:stretch;">
+        <input type="text" data-path="explications.${key}.criteres.${i}.titre" value="${esc(c.titre)}" placeholder="Titre du critère">
+        <textarea data-path="explications.${key}.criteres.${i}.texte" style="margin-top:6px;">${esc(c.texte)}</textarea>
+        <div style="margin-top:6px;"><button class="btn-mini danger" data-action="remove-item" data-path="explications.${key}.criteres.${i}" ${sec.criteres.length > 1 ? "" : "disabled"}>Supprimer ce critère</button></div>
+      </div>`).join("");
+      return `<div class="adm-question"><div style="font-weight:700;margin-bottom:8px;">${esc(label)}</div>
+        <div class="adm-field"><label>Texte d'introduction</label><textarea data-path="explications.${key}.intro">${esc(sec.intro)}</textarea></div>
+        <div class="adm-options">${critItems}</div>
+        <button class="btn-mini" data-action="add-critere" data-path="explications.${key}.criteres">+ Ajouter un critère</button>
+      </div>`;
+    }).join("");
+}
+function renderAdminReponses() {
+  return `<p class="lead">Dernières réponses enregistrées dans Supabase (30 plus récentes).</p>
+    <div id="reponses-container"><p class="muted">Chargement…</p></div>
+    <button class="btn-mini" data-action="refresh-reponses" style="margin-top:10px;">Actualiser</button>`;
+}
+function buildAdminPanel() {
+  switch (adminSection) {
+    case "identite": return renderAdminIdentite();
+    case "identification": return renderAdminIdentification();
+    case "capacite": return `<p class="lead">Modifiez les intitulés, les réponses et les points. Les changements s'appliquent immédiatement au formulaire.</p>${renderQuestionEditor("capacite", CONFIG.capacite)}<button class="btn-mini" data-action="add-question" data-path="capacite">+ Ajouter une question</button>`;
+    case "tolerance": return `<p class="lead">Modifiez les intitulés, les réponses, les points et — pour la question des courbes — les pourcentages de gain et de perte.</p>${renderQuestionEditor("tolerance", CONFIG.tolerance)}<button class="btn-mini" data-action="add-question" data-path="tolerance">+ Ajouter une question</button>`;
+    case "connaissance": return renderAdminConnaissance();
+    case "profils": return renderAdminProfils();
+    case "explications": return renderAdminExplications();
+    case "reponses": return renderAdminReponses();
+    case "export": return renderAdminExport();
+    default: return "";
+  }
+}
+
+/* ----------------------------- ASSEMBLAGE & RENDU GLOBAL ----------------------------- */
+function renderExplicationModal() {
+  const sections = [
+    ["Identification et objectif", CONFIG.explications.identification],
+    ["Capacité à prendre des risques", CONFIG.explications.capacite],
+    ["Tolérance au risque", CONFIG.explications.tolerance],
+    ["Connaissance et expérience", CONFIG.explications.connaissance]
+  ];
+  const body = sections.map(([titre, sec]) => `
+    <h3>${esc(titre)}</h3>
+    <p class="muted">${esc(sec.intro)}</p>
+    ${sec.criteres.map(c => `<p><strong>${esc(c.titre)}.</strong> ${esc(c.texte)}</p>`).join("")}
+  `).join("");
+  return `<div class="modal-backdrop">
+    <div class="modal-card">
+      <div class="modal-head"><h2 style="margin:0;">Comprendre mon profilage de risque</h2>
+      <button class="modal-close" data-action="close-explanation">Fermer</button></div>
+      <div class="modal-body">${body}</div>
+    </div>
+  </div>`;
+}
+function buildClientShell() {
+  return `<div class="shell">
+    <div class="masthead"><div><div class="org">${esc(CONFIG.organisation)}</div><h1>Profil de risque investisseur</h1></div>
+    <button class="admin-link" data-action="toggle-admin">Mode administrateur</button></div>
+    <div class="rail">${renderRail()}</div>
+    <div class="panel">${(() => { switch (state.step) { case 0: return renderStep0(); case 1: return renderStep1(); case 2: return renderStep2(); case 3: return renderStep3(); case 4: return renderStep4(); default: return ""; } })()}</div>
+    <div class="footer-note">Cet outil constitue une aide interne à la détermination du profil de risque et ne se substitue pas à un conseil en investissement personnalisé. Les tranches financières et l'allocation indicative affichées sont provisoires, en attente de validation par la Direction.</div>
+  </div>${showExplanation ? renderExplicationModal() : ""}`;
+}
+function buildAdminShell() {
+  const tabs = ADMIN_TABS.map(t => `<button class="admin-tab ${adminSection === t.key ? "active" : ""}" data-action="goto-admin-section" data-section="${t.key}">${t.label}</button>`).join("");
+  return `<div class="shell">
+    <div class="masthead"><div><div class="org">${esc(CONFIG.organisation)}</div><h1>Mode administrateur</h1></div>
+    <button class="admin-link" data-action="toggle-admin">Quitter le mode administrateur</button></div>
+    <div class="admin-tabs">${tabs}</div>
+    <div class="panel">${buildAdminPanel()}</div>
+  </div>`;
+}
+function render() {
+  document.getElementById("app").innerHTML = `<div class="brand-strip"></div>` + (mode === "admin" ? buildAdminShell() : buildClientShell());
+  if (mode === "client" && state.step === 4 && state.valide) {
+    const alloc = allocationParNiveau(state.niveauChoisi);
+    drawDonut(document.getElementById("donutCanvas"), allocItems(alloc).map(([, v, c]) => ({ value: v, color: c })));
+  }
+}
+
+/* ----------------------------- GRAPHIQUE EN CAMEMBERT ----------------------------- */
+function drawDonut(canvas, segments) {
+  if (!canvas) return;
+  const ctx = canvas.getContext && canvas.getContext("2d");
+  if (!ctx) return;
+  const dpr = window.devicePixelRatio || 1, size = 200;
+  canvas.width = size * dpr; canvas.height = size * dpr; canvas.style.width = size + "px"; canvas.style.height = size + "px";
+  ctx.scale(dpr, dpr);
+  const cx = size / 2, cy = size / 2, rOuter = size / 2 - 4, rInner = rOuter * 0.55, rLabel = (rOuter + rInner) / 2;
+  const total = segments.reduce((s, x) => s + x.value, 0) || 1;
+  let start = -Math.PI / 2;
+  segments.forEach(seg => {
+    if (seg.value <= 0) return;
+    const angle = (seg.value / total) * Math.PI * 2, mid = start + angle / 2;
+    ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, rOuter, start, start + angle); ctx.closePath();
+    ctx.fillStyle = seg.color; ctx.fill();
+    if (seg.value / total > 0.05) {
+      ctx.fillStyle = textColorFor(seg.color);
+      ctx.font = "600 13px Inter, Arial, sans-serif"; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText(Math.round((seg.value / total) * 100) + "%", cx + Math.cos(mid) * rLabel, cy + Math.sin(mid) * rLabel);
+    }
+    start += angle;
+  });
+  ctx.beginPath(); ctx.arc(cx, cy, rInner, 0, Math.PI * 2); ctx.fillStyle = "#FFFDFA"; ctx.fill();
+}
+
+/* ----------------------------- EXPORT PDF DU RÉSULTAT ----------------------------- */
+function telechargerPDF() {
+  const { jsPDF } = window.jspdf;
+  const r = dernierResultat, profil = profilParNiveau(state.niveauChoisi), alloc = allocationParNiveau(state.niveauChoisi);
+  const doc = new jsPDF({ unit: "pt", format: "a4" });
+  const redRgb = hexToRgb("#A6192E");
+
+  doc.setFillColor(redRgb.r, redRgb.g, redRgb.b); doc.rect(0, 0, 595, 76, "F");
+  doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(16); doc.text(CONFIG.organisation, 40, 34);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(11); doc.text("Profil de risque investisseur", 40, 54);
+
+  doc.setTextColor(26, 26, 26);
+  let y = 104;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  doc.text(`Client : ${state.identification.nom || "—"}`, 40, y); y += 14;
+  doc.text(`Date du questionnaire : ${state.identification.dateRemplissage || "—"}`, 40, y); y += 22;
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.text("Résultat du profilage", 40, y); y += 16;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  doc.text(`Capacité à prendre des risques : ${r.scoreCap} / ${maxScore(CONFIG.capacite)} (niveau ${r.niveauCap})`, 40, y); y += 14;
+  doc.text(`Tolérance au risque : ${r.scoreTol} / ${maxScore(CONFIG.tolerance)} (niveau ${r.niveauTol})`, 40, y); y += 14;
+  doc.text(`Profil calculé : niveau ${r.niveauCalcule}`, 40, y); y += 20;
+
+  doc.setFillColor(redRgb.r, redRgb.g, redRgb.b); doc.roundedRect(40, y, 260, 28, 6, 6, "F");
+  doc.setTextColor(255, 255, 255); doc.setFont("helvetica", "bold"); doc.setFontSize(11);
+  doc.text(`Niveau ${profil.niveau} — ${profil.nom}`, 52, y + 18);
+  y += 28 + 16; doc.setTextColor(26, 26, 26);
+
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  const desc = doc.splitTextToSize(profil.description, 500);
+  doc.text(desc, 40, y); y += desc.length * 13 + 4;
+  doc.text(`Horizon de placement minimal recommandé : ${profil.horizon}`, 40, y); y += 24;
+
+  doc.setDrawColor(216, 212, 206); doc.setLineWidth(0.6); doc.line(40, y, 555, y); y += 20;
+
+  doc.setFont("helvetica", "bold"); doc.setFontSize(11); doc.text("Allocation stratégique indicative", 40, y); y += 18;
+  const chartTop = y;
+  doc.setFont("helvetica", "normal"); doc.setFontSize(10);
+  allocItems(alloc).filter(([, v]) => v > 0).forEach(([lbl, val, color]) => {
+    const rgb = hexToRgb(color);
+    doc.setFillColor(rgb.r, rgb.g, rgb.b); doc.rect(40, y - 8, 10, 10, "F");
+    doc.setTextColor(26, 26, 26); doc.text(`${lbl} — ${val}%`, 56, y);
+    y += 18;
+  });
+  const canvas = document.getElementById("donutCanvas");
+  if (canvas) doc.addImage(canvas.toDataURL("image/png"), "PNG", 380, chartTop - 6, 130, 130);
+  y = Math.max(y, chartTop - 6 + 130) + 18;
+
+  doc.setDrawColor(216, 212, 206); doc.line(40, 760, 555, 760);
+  doc.setFont("helvetica", "italic"); doc.setFontSize(8); doc.setTextColor(120, 120, 120);
+  doc.text("Document généré automatiquement par l'outil interne de profilage. Ne constitue pas un conseil en investissement personnalisé.", 40, 774);
+
+  const nomFichier = ("profil-risque-" + (state.identification.nom || "client")).replace(/\s+/g, "_").toLowerCase();
+  doc.save(nomFichier + ".pdf");
+}
+
+/* ----------------------------- CONNEXION SUPABASE ----------------------------- */
+let supabaseClient = null;
+function initSupabase() {
+  if (window.supabase && CONFIG.supabase && CONFIG.supabase.url && CONFIG.supabase.anonKey) {
+    try { supabaseClient = window.supabase.createClient(CONFIG.supabase.url, CONFIG.supabase.anonKey); }
+    catch (e) { console.error("Erreur d'initialisation Supabase :", e); supabaseClient = null; }
+  }
+}
+async function enregistrerReponse() {
+  const statusEl = document.getElementById("save-status");
+  if (!supabaseClient) { if (statusEl) statusEl.textContent = "Connexion Supabase non configurée — réponse non transmise."; return; }
+  if (statusEl) statusEl.textContent = "Enregistrement en cours…";
+  const r = dernierResultat;
+  const payload = {
+    organisation: CONFIG.organisation,
+    nom: state.identification.nom || null,
+    date_naissance: state.identification.dateNaissance || null,
+    statut_matrimonial: state.identification.statutMatrimonial || null,
+    objectif: state.identification.objectif || null,
+    date_remplissage: state.identification.dateRemplissage || null,
+    reponses_capacite: state.capacite,
+    reponses_tolerance: state.tolerance,
+    reponses_connaissance: state.connaissance,
+    score_capacite: r.scoreCap, niveau_capacite: r.niveauCap,
+    score_tolerance: r.scoreTol, niveau_tolerance: r.niveauTol,
+    niveau_calcule: r.niveauCalcule, niveau_choisi: state.niveauChoisi,
+    motif_ecart: state.motifEcart || null,
+    garde_fou_declenche: gardeFouDeclenche(state.niveauChoisi),
+    garde_fou_ack: state.gardeFouAck
+  };
+  try {
+    const { error } = await supabaseClient.from(CONFIG.supabase.table).insert(payload);
+    if (error) throw error;
+    if (statusEl) statusEl.textContent = "✓ Réponse enregistrée";
+  } catch (err) {
+    console.error("Erreur d'enregistrement Supabase :", err);
+    if (statusEl) statusEl.textContent = "⚠ Échec de l'enregistrement à distance (la réponse reste affichée ici, mais n'a pas été transmise).";
+  }
+}
+async function chargerReponses() {
+  const container = document.getElementById("reponses-container");
+  if (!container) return;
+  if (!supabaseClient) { container.innerHTML = '<p class="muted">Connexion Supabase non configurée (voir l\'onglet Identité de l\'outil).</p>'; return; }
+  try {
+    const { data, error } = await supabaseClient.from(CONFIG.supabase.table)
+      .select("created_at,nom,niveau_calcule,niveau_choisi").order("created_at", { ascending: false }).limit(30);
+    if (error) throw error;
+    if (!data || data.length === 0) { container.innerHTML = '<p class="muted">Aucune réponse enregistrée pour le moment.</p>'; return; }
+    const rows = data.map(r => `<tr><td>${esc(new Date(r.created_at).toLocaleString("fr-FR"))}</td><td>${esc(r.nom || "—")}</td><td>${r.niveau_calcule ?? "—"}</td><td>${r.niveau_choisi ?? "—"}</td></tr>`).join("");
+    container.innerHTML = `<table class="alloc-table"><thead><tr><th>Date</th><th>Client</th><th>Niveau calculé</th><th>Niveau retenu</th></tr></thead><tbody>${rows}</tbody></table>`;
+  } catch (err) {
+    container.innerHTML = '<p class="muted">Erreur lors du chargement : ' + esc(err.message || String(err)) + "</p>";
+  }
+}
+
+/* ----------------------------- EXPORT / IMPORT DE LA CONFIGURATION ----------------------------- */
+function exporterConfig() {
+  const blob = new Blob([JSON.stringify(CONFIG, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a"); a.href = url; a.download = "configuration-profil-risque.json"; a.click();
+  URL.revokeObjectURL(url);
+}
+function importerConfig(file) {
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      Object.keys(CONFIG).forEach(k => delete CONFIG[k]);
+      Object.assign(CONFIG, data);
+      alert("Configuration importée avec succès.");
+      render();
+    } catch (err) { alert("Fichier invalide : " + err.message); }
+  };
+  reader.readAsText(file);
+}
+
+/* ----------------------------- GESTION DES ÉVÉNEMENTS ----------------------------- */
+const app = document.getElementById("app");
+
+app.addEventListener("input", e => {
+  if (e.target.matches("[data-field]") && (e.target.type === "text" || e.target.type === "date")) {
+    state.identification[e.target.dataset.field] = e.target.value;
+    const btn = app.querySelector('[data-action="next"]');
+    if (btn) btn.disabled = !validateStep(state.step);
+  } else if (e.target.id === "champ-motifEcart") {
+    state.motifEcart = e.target.value;
+  } else if (e.target.matches("[data-path]") && e.target.type !== "checkbox" && e.target.type !== "file") {
+    const path = e.target.dataset.path;
+    setAt(CONFIG, path, e.target.dataset.type === "number" ? Number(e.target.value) : e.target.value);
+    const m = path.match(/^allocation\.(\d+)\./);
+    if (m) {
+      const i = Number(m[1]), a = CONFIG.allocation[i], sum = a.obligataire + a.opcvm + a.actions + a.liquidites;
+      const el = document.getElementById("sum-" + i);
+      if (el) { el.textContent = `Somme actuelle : ${sum}% ${sum === 100 ? "✓" : "— doit totaliser 100%"}`; el.className = sum === 100 ? "sum-ok" : "sum-warn"; }
+    }
+  }
+});
+
+app.addEventListener("change", e => {
+  if (e.target.matches("input[type=radio][data-qid]")) {
+    state[e.target.dataset.bloc][e.target.dataset.qid] = Number(e.target.value); render();
+  } else if (e.target.matches("select[data-field]") && e.target.dataset.field && CONFIG.identification.champs.some(c => c.id === e.target.dataset.field)) {
+    state.identification[e.target.dataset.field] = e.target.value; render();
+  } else if (e.target.matches("select[data-instr]")) {
+    const instr = e.target.dataset.instr, field = e.target.dataset.field;
+    if (!state.connaissance[instr]) state.connaissance[instr] = {};
+    state.connaissance[instr][field] = e.target.value === "" ? undefined : Number(e.target.value);
+    render();
+  } else if (e.target.id === "champ-gardeFouAck") {
+    state.gardeFouAck = e.target.checked; render();
+  } else if (e.target.matches('[data-action="toggle-sensible"]')) {
+    const idx = Number(e.target.dataset.instrumentIndex), name = CONFIG.connaissance.instruments[idx];
+    const pos = CONFIG.connaissance.instrumentsSensibles.indexOf(name);
+    if (e.target.checked) { if (pos === -1) CONFIG.connaissance.instrumentsSensibles.push(name); }
+    else if (pos > -1) CONFIG.connaissance.instrumentsSensibles.splice(pos, 1);
+  } else if (e.target.id === "import-file") {
+    if (e.target.files && e.target.files[0]) importerConfig(e.target.files[0]);
+  }
+});
+
+app.addEventListener("click", e => {
+  const goto = e.target.closest('[data-action="goto"]');
+  const courbe = e.target.closest('[data-action="select-courbe"]');
+  const choixNiveau = e.target.closest('[data-action="choisir-niveau"]');
+  const adminTab = e.target.closest('[data-action="goto-admin-section"]');
+  const closeExp = e.target.closest('[data-action="close-explanation"]');
+  const backdropClick = e.target.classList && e.target.classList.contains("modal-backdrop");
+  const btn = e.target.closest("button[data-action]");
+
+  if (goto) { const t = Number(goto.dataset.step); if (t <= state.step) { state.step = t; render(); window.scrollTo(0, 0); } return; }
+  if (courbe) { state.tolerance[courbe.dataset.qid] = Number(courbe.dataset.idx); render(); return; }
+  if (choixNiveau) { state.niveauChoisi = Number(choixNiveau.dataset.niveau); state.motifEcart = ""; render(); return; }
+  if (adminTab) { adminSection = adminTab.dataset.section; render(); if (adminSection === "reponses") chargerReponses(); return; }
+  if (closeExp || backdropClick) { showExplanation = false; render(); return; }
+  if (!btn) return;
+  const action = btn.dataset.action;
+
+  if (action === "show-explanation") { showExplanation = true; render(); }
+  else if (action === "next") { if (validateStep(state.step)) { state.step++; if (state.step === 4) dernierResultat = calculerResultat(); render(); window.scrollTo(0, 0); } }
+  else if (action === "prev") { state.step = Math.max(0, state.step - 1); render(); window.scrollTo(0, 0); }
+  else if (action === "valider-profil") { state.valide = true; render(); enregistrerReponse(); }
+  else if (action === "modifier-profil") { state.valide = false; render(); }
+  else if (action === "telecharger-pdf") { telechargerPDF(); }
+  else if (action === "toggle-admin") {
+    if (mode === "client") {
+      const pass = window.prompt("Mot de passe administrateur :");
+      if (pass === CONFIG.adminPasscode) { mode = "admin"; adminSection = "identite"; }
+      else if (pass !== null) alert("Mot de passe incorrect.");
+    } else { mode = "client"; state = freshState(); dernierResultat = null; }
+    render();
+  }
+  else if (action === "add-option") {
+    const arr = getAt(CONFIG, btn.dataset.path);
+    arr.push(btn.dataset.template === "courbe" ? { label: "Nouvelle courbe", points: 1, gain: 10, perte: 5 } : { label: "Nouvelle option", points: 1 });
+    render();
+  }
+  else if (action === "add-question") {
+    getAt(CONFIG, btn.dataset.path).push({ id: "q_" + Date.now(), label: "Nouvelle question", options: [{ label: "Option 1", points: 1 }] });
+    render();
+  }
+  else if (action === "add-critere") {
+    getAt(CONFIG, btn.dataset.path).push({ titre: "Nouveau critère", texte: "" });
+    render();
+  }
+  else if (action === "remove-item") { removeAt(CONFIG, btn.dataset.path); render(); }
+  else if (action === "add-list-item") { getAt(CONFIG, btn.dataset.path).push("Nouvelle option"); render(); }
+  else if (action === "add-instrument") { CONFIG.connaissance.instruments.push("Nouvel instrument"); render(); }
+  else if (action === "export-config") { exporterConfig(); }
+  else if (action === "refresh-reponses") { chargerReponses(); }
+});
+
+initSupabase();
+render();
 </script>
-
 </body>
 </html>
